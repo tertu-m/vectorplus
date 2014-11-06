@@ -69,19 +69,21 @@ def buildFastaFile(listOfTuples,fileName):
 # START UTILITY METHODS
 ######
 
- # BioPython's generator for fasta files - returns (name, seq)
- # Call using 'with open(file) as f'
-def read_fasta(file):
-    name, seq = None, []
-    for line in file:
-        line = line.rstrip()
-        if line.startswith(">"):
-            if name: yield (name, ''.join(seq))
-            name, seq = line, []
+#Poor replacement for the BioPython generator written by Jack
+def read_fasta(fileHandle):
+    title = None
+    data = None
+    for line in fileHandle:
+        if line[0]==">":
+            if title != None:
+                yield (title,data)
+            title = line[1:]
+            data = ''
         else:
-            seq.append(line)
-    if name:
-        yield (name, ''.join(seq))
+            data += line
+    if title == None:
+        yield None
+    yield (title,data)
 
  # Generates list of locations of all substrings in seq
 def substrings(seq, sub):
