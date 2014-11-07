@@ -80,7 +80,7 @@ def read_fasta(fileHandle):
             title = line[1:]
             data = ''
         else:
-            data += line
+            data += line.strip()
     if title == None:
         yield None
     yield (title,data)
