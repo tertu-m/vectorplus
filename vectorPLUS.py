@@ -7,7 +7,7 @@ import textwrap
  # Returns a list (see below) of all matching sequences in the given scaffold
  # with a given initial search length.
  # [name, (start_index, end_index)]
-def tryFindStartCodon(scaffold, sequence, initialSearchLength=10):
+def find_matching_seqs(scaffold, sequence, initialSearchLength=10):
     searchLength = initialSearchLength - 1
     outputList = []
     workList = []
@@ -55,7 +55,7 @@ def RNA_to_DNA(seq):
     return dna
 
  # Takes a list of (title, nucleotide) tuples and prints as a FASTA file to the given filename
-def buildFastaFile(listOfTuples,fileName):
+def write_fasta(listOfTuples,fileName):
     output = ""
     if fileName.find(".txt",0) == -1:
         fileName += ".txt"
@@ -141,7 +141,7 @@ def main():
     elif is_DNA == "RNA":
         search_seq = search[1].upper()
         scaffold_seq = scaffold[1].upper()
-    start_codons = tryFindStartCodon(scaffold_seq, search_seq)
+    start_codons = find_matching_seqs(scaffold_seq, search_seq)
 
         # If only ONE result found, fasta outputted automatically
     if len(start_codons) == 2:
@@ -152,12 +152,12 @@ def main():
         fileName = input("What would you like to name the output fasta file? \n")
         bp = input("How many base pairs upstream would you like to find? \n")
         scaffold_seq = RNA_to_DNA(scaffold_seq)
-        buildFastaFile([(bp + " base pairs upstream of " + search[0]
+        write_fasta([(bp + " base pairs upstream of " + search[0]
                         , scaffold_seq[start_index - int(bp):start_index])], fileName)
         print("File " + fileName + " saved.")
-    #elif len(start_codons) > 2:           # If multiple results found, user chooses which fasta file to output
-        #i = 0
-        #for start, end in 
+    elif len(start_codons) > 2:           # If multiple results found, user chooses which fasta file to output
+        print("Multiple possible sequences found.")
+        print("Further processing is necessary.") #I just want to do something else this commit
     
 
 main()
