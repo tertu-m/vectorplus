@@ -6,19 +6,19 @@ import textwrap
 
  # Returns a list (see below) of all matching sequences in the given scaffold
  # with a given initial search length.
- # [name, (start_index, end_index)]
-def find_matching_seqs(scaffold, sequence, initialSearchLength=10):
+ # Returns: [search_length, (start_index, end_index), ...]
+def find_matching_seqs(scaffold, sequence, initialSearchLength=5):
     searchLength = initialSearchLength - 1
     outputList = []
     workList = []
     while True:
-        searchLength+=1
+        searchLength += 1
         outputList = workList
         workList = []
-        for start in substrings(scaffold,sequence[:searchLength]):
-            workList.append((start,start+searchLength))
+        for start in substrings(scaffold, sequence[:searchLength]):
+            workList.append((start, start+searchLength))
         if len(workList)==0:
-            outputList.insert(0,searchLength-1)
+            outputList.insert(0, searchLength-1)
             return outputList
 
  # Returns a codon sequence for a given RNA sequence
@@ -54,8 +54,27 @@ def RNA_to_DNA(seq):
             dna += c
     return dna
 
- # Takes a list of (title, nucleotide) tuples and prints as a FASTA file to the given filename
-def write_fasta(listOfTuples,fileName):
+######
+# START UTILITY METHODS
+######
+
+ # BioPython's generator for fasta files - returns (name, seq)
+ # Call using 'with open(file) as f'
+def read_fasta(file):
+    name, seq = None, []
+    for line in file:
+        line = line.rstrip()
+        if line.startswith(">"):
+            if name: yield (name, ''.join(seq))
+            name, seq = line, []
+        else:
+            seq.append(line)
+    if name:
+        yield (name, ''.join(seq))
+
+ # Takes a list of [(title, seq), ...] tuples and prints as a FASTA file
+ # to the given filename
+def write_fasta(listOfTuples, fileName):
     output = ""
     if fileName.find(".txt",0) == -1:
         fileName += ".txt"
@@ -64,26 +83,6 @@ def write_fasta(listOfTuples,fileName):
         output += textwrap.fill(data[1], 80)
     with open(fileName, 'w') as outFile:
         outFile.write(output)
-
-######
-# START UTILITY METHODS
-######
-
-#Poor replacement for the BioPython generator written by Jack
-def read_fasta(fileHandle):
-    title = None
-    data = None
-    for line in fileHandle:
-        if line[0]==">":
-            if title != None:
-                yield (title,data)
-            title = line[1:]
-            data = ''
-        else:
-            data += line.strip()
-    if title == None:
-        yield None
-    yield (title,data)
 
  # Generates list of locations of all substrings in seq
 def substrings(seq, sub):
@@ -124,40 +123,66 @@ def file_to_dict(file):
 def fasta_to_strings(fileName):
     with open(fileName) as f:
         for name, seq in read_fasta(f):
-            return (name[1:], seq)  
+            return (name[1:], seq)
+
+ # Called when search returns only a single result. Asks for filename
+ # and base pairs from user and outputs fasta file with seq X bp
+ # upstream of found sequence
+def single_result(length, start, searchName, scaffoldSeq, fileName, bp):
+    print("Matching sequence of length " + str(length) +
+          " found in scaffold at index " + str(start+1) + ".")
+    seq = scaffoldSeq[start - int(bp):start]
+    write_fasta([(bp + " base pairs upstream of " + searchName, scaffoldSeq)], fileName)
+    print("File '" + fileName + "' saved.")
+
 
 def main():
-        # 
-    is_DNA = input("Are you entering DNA or RNA? Type 'DNA' or 'RNA': \n")
-    large_fasta = input("Input scaffold's fasta filename: \n")
-    small_fasta = input("Input search sequence's filename: \n")
-    scaffold = fasta_to_strings(large_fasta)
-    search = fasta_to_strings(small_fasta)
     
-        # 
-    if is_DNA == "DNA":
-        search_seq = transcribe_DNA(search[1].upper())
-        scaffold_seq = transcribe_DNA(scaffold[1].upper())
-    elif is_DNA == "RNA":
-        search_seq = search[1].upper()
-        scaffold_seq = scaffold[1].upper()
-    start_codons = find_matching_seqs(scaffold_seq, search_seq)
+        # Gets search FASTA and scaffold to be searched in from user, adds .txt to name
+    largeFasta = input("Input scaffold's fasta filename: \n")
+    smallFasta = input("Input search sequence's filename: \n")
+    if largeFasta.find(".txt",0) == -1: largeFasta += ".txt"
+    if smallFasta.find(".txt",0) == -1: smallFasta += ".txt"
 
-        # If only ONE result found, fasta outputted automatically
-    if len(start_codons) == 2:
-        start_index = start_codons[1][0]
-        length = start_codons[0]
-        print("Matching sequence of length " + str(length) +
-              " found in scaffold at index " + str(start_index+1) + ".")
-        fileName = input("What would you like to name the output fasta file? \n")
-        bp = input("How many base pairs upstream would you like to find? \n")
-        scaffold_seq = RNA_to_DNA(scaffold_seq)
-        write_fasta([(bp + " base pairs upstream of " + search[0]
-                        , scaffold_seq[start_index - int(bp):start_index])], fileName)
-        print("File " + fileName + " saved.")
-    elif len(start_codons) > 2:           # If multiple results found, user chooses which fasta file to output
-        print("Multiple possible sequences found.")
-        print("Further processing is necessary.") #I just want to do something else this commit
+        # Builds a tuple of (name, seq) out of each fasta
+    scaffold = fasta_to_strings(largeFasta)
+    search = fasta_to_strings(smallFasta)
+    
+        # Changes seq to uppercase
+    searchSeq = search[1].upper()
+    scaffoldSeq = RNA_to_DNA(scaffold[1].upper())
+
+        # Runs search
+    startCodons = find_matching_seqs(scaffoldSeq, searchSeq)
+
+        # Gets desired filename and base pairs to be returned
+    fileName = input("What would you like to name the output fasta file? \n")
+    bp = input("How many base pairs upstream would you like to find? \n")
+
+        # Sets clear variables for search sequence's name and length
+    searchName = search[0]
+    length = startCodons[0]
+
+        # Calls single_result
+    if len(startCodons) == 2:
+        start = startCodons[1][0]
+        single_result(length, start, searchName, scaffoldSeq, fileName, bp)
+
+        # If multiple results found, all are output in a single fasta file
+    elif len(startCodons) > 2:
+        print("Multiple matching sequences found. \n")
+        listOfTuples = []
+        for i in range(1, len(startCodons)):
+            start = startCodons[i][0]
+            title = bp + " base pairs upstream of " + searchName + " at index " + start
+            seq = scaffoldSeq[start - int(bp):start]
+            listOfTuples.append((title, seq))
+        write_fasta(listOfTuples, fileName)
+
+        # In other cases, return no results
+    else:
+        print("No results found.")
+        
     
 
 main()
