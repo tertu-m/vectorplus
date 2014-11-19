@@ -60,17 +60,20 @@ def RNA_to_DNA(seq):
 
  # BioPython's generator for fasta files - returns (name, seq)
  # Call using 'with open(file) as f'
-def read_fasta(file):
-    name, seq = None, []
-    for line in file:
-        line = line.rstrip()
-        if line.startswith(">"):
-            if name: yield (name, ''.join(seq))
-            name, seq = line, []
+def read_fasta(fileHandle):
+    title = None
+    data = None
+    for line in fileHandle:
+        if line[0]==">":
+            if title != None:
+                yield (title,data)
+            title = line[1:]
+            data = ''
         else:
-            seq.append(line)
-    if name:
-        yield (name, ''.join(seq))
+            data += line.strip()
+    if title == None:
+        yield None
+    yield (title,data)
 
  # Takes a list of [(title, seq), ...] tuples and prints as a FASTA file
  # to the given filename
