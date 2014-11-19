@@ -58,7 +58,7 @@ def RNA_to_DNA(seq):
 # START UTILITY METHODS
 ######
 
- # BioPython's generator for fasta files - returns (name, seq)
+ # generator for fasta files - returns (name, seq)
  # Call using 'with open(file) as f'
 def read_fasta(fileHandle):
     title = None
