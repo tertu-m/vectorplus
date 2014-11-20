@@ -4,6 +4,10 @@ import textwrap
 # START IMPORTANT METHODS
 ######
 
+#not done
+def get_distance(a, b):
+  distance = [[0 for x in range(len(b))] for x in range(len(a))]
+
  # Returns a list (see below) of all matching sequences in the given scaffold
  # with a given initial search length.
  # Returns: [search_length, (start_index, end_index), ...]
