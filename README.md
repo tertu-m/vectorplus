@@ -8,7 +8,7 @@ outputs its regulatory region, given the size of said region. Reads and writes u
 USE: Put your larger DNA sequence, likely a scaffold, and your search sequence in the same folder as
 VectorPLUS.py. Make sure they are fasta files. Then, run VectorPLUS. 
 
-UPCOMING FEATURES: Fuzzy searching (finally)
+UPCOMING FEATURES: Fuzzy searching
 
 KNOWN ISSUES: Not sufficiently tested yet for cases where multiple equal size matches are found. 
 Has a minimum search size of 5. 
