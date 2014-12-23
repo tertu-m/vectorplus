@@ -82,8 +82,8 @@ def write_fasta(listOfTuples, fileName):
     if fileName.find(".txt",0) == -1:
         fileName += ".txt"
     for data in listOfTuples:
-        output += (">" + data[0] + "\n")
-        output += textwrap.fill(data[1], 80)
+        output += (">" + data[0])
+        output += textwrap.fill(data[1], 60)
     with open(fileName, 'w') as outFile:
         outFile.write(output)
 
@@ -124,7 +124,7 @@ def file_to_dict(file):
  # Returns a single tuple (head, name) for a given fasta file
  # In other words, gets the first fasta entry from a fasta file
 def fasta_to_strings(fileName):
-    with open(fileName) as f:
+    with open(fileName, encoding="cp1252") as f:
         for name, seq in read_fasta(f):
             return (name[1:], seq)
 
@@ -135,7 +135,7 @@ def single_result(length, start, searchName, scaffoldSeq, fileName, bp):
     print("Matching sequence of length " + str(length) +
           " found in scaffold at index " + str(start+1) + ".")
     seq = scaffoldSeq[start - int(bp):start]
-    write_fasta([(bp + " base pairs upstream of " + searchName, scaffoldSeq)], fileName)
+    write_fasta([(bp + " base pairs upstream of " + searchName, seq)], fileName)
     print("File '" + fileName + "' saved.")
 
 
