@@ -83,7 +83,8 @@ def write_fasta(listOfTuples, fileName):
         fileName += ".txt"
     for data in listOfTuples:
         output += (">" + data[0])
-        output += textwrap.fill(data[1], 60)
+        output += textwrap.fill(data[1], 70)
+        output += "\n"
     with open(fileName, 'w') as outFile:
         outFile.write(output)
 
@@ -121,12 +122,14 @@ def file_to_dict(file):
 # START I/O METHODS
 ######
 
+
  # Returns a single tuple (head, name) for a given fasta file
  # In other words, gets the first fasta entry from a fasta file
 def fasta_to_strings(fileName):
     with open(fileName, encoding="cp1252") as f:
         for name, seq in read_fasta(f):
-            return (name[1:], seq)
+            return (name, seq)
+
 
  # Called when search returns only a single result. Asks for filename
  # and base pairs from user and outputs fasta file with seq X bp
@@ -134,8 +137,32 @@ def fasta_to_strings(fileName):
 def single_result(length, start, searchName, scaffoldSeq, fileName, bp):
     print("Matching sequence of length " + str(length) +
           " found in scaffold at index " + str(start+1) + ".")
-    seq = scaffoldSeq[start - int(bp):start]
-    write_fasta([(bp + " base pairs upstream of " + searchName, seq)], fileName)
+    x = start - int(bp)     # Makes sure the sequence doesn't wrap around the scaffold
+    if x < 0:
+        x = 0
+    seq = scaffoldSeq[x:start]
+    title = "Upstream of " + searchName + " from " + str(x) + " to " + str(start)
+    title = title.replace("\n", "") + "\n"
+    write_fasta([(title, seq)], fileName)
+    print("File '" + fileName + "' saved.")
+
+
+ # Called when search returns multiple results. Asks for filename
+ # and base pairs from user and outputs fasta file with *all* seq X 
+ # bp upstream of found sequence
+def multiple_result(length, startCodons, searchName, scaffoldSeq, fileName, bp):
+    print("Multiple matching sequences found of length " + str(length))
+    listOfTuples = []
+    for i in range(1, len(startCodons)):
+        start = startCodons[i][0]
+        x = start - int(bp)     # Makes sure the sequence doesn't wrap around the scaffold
+        if x < 0:
+            x = 0
+        title = "Upstream of " + searchName + " from " + str(x) + " to " + str(start)
+        title = title.replace("\n", "") + "\n"
+        seq = scaffoldSeq[x:start]
+        listOfTuples.append((title, seq))
+    write_fasta(listOfTuples, fileName)
     print("File '" + fileName + "' saved.")
 
 
@@ -166,21 +193,14 @@ def main():
     searchName = search[0]
     length = startCodons[0]
 
-        # Calls single_result
+        # If only one result found, output in fasta file
     if len(startCodons) == 2:
         start = startCodons[1][0]
         single_result(length, start, searchName, scaffoldSeq, fileName, bp)
 
         # If multiple results found, all are output in a single fasta file
     elif len(startCodons) > 2:
-        print("Multiple matching sequences found. \n")
-        listOfTuples = []
-        for i in range(1, len(startCodons)):
-            start = startCodons[i][0]
-            title = bp + " base pairs upstream of " + searchName + " at index " + start
-            seq = scaffoldSeq[start - int(bp):start]
-            listOfTuples.append((title, seq))
-        write_fasta(listOfTuples, fileName)
+        multiple_result(length, startCodons, searchName, scaffoldSeq, fileName, bp)
 
         # In other cases, return no results
     else:
