@@ -131,9 +131,9 @@ def fasta_to_strings(fileName):
             return (name, seq)
 
 
- # Called when search returns only a single result. Asks for filename
- # and base pairs from user and outputs fasta file with seq X bp
- # upstream of found sequence
+ # Called when search returns only a single result. Uses filename
+ # and desired sequence length from user and outputs fasta file with
+ # region upstream of found sequence
 def single_result(length, start, searchName, scaffoldSeq, fileName, bp):
     print("Matching sequence of length " + str(length) +
           " found in scaffold at index " + str(start+1) + ".")
@@ -147,9 +147,9 @@ def single_result(length, start, searchName, scaffoldSeq, fileName, bp):
     print("File '" + fileName + "' saved.")
 
 
- # Called when search returns multiple results. Asks for filename
- # and base pairs from user and outputs fasta file with *all* seq X 
- # bp upstream of found sequence
+ # Called when sequenceSearch returns multiple results. Uses filename
+ # and desired sequence length from user and outputs fasta file with 
+ # *all* seq upstream of found sequence
 def multiple_result(length, startCodons, searchName, scaffoldSeq, fileName, bp):
     print("Multiple matching sequences found of length " + str(length))
     listOfTuples = []
@@ -166,26 +166,30 @@ def multiple_result(length, startCodons, searchName, scaffoldSeq, fileName, bp):
     print("File '" + fileName + "' saved.")
 
 
-def main():
-    
-        # Gets search FASTA and scaffold to be searched in from user, adds .txt to name
-    largeFasta = input("Input scaffold's fasta filename: \n")
-    smallFasta = input("Input search sequence's filename: \n")
-    if largeFasta.find(".txt",0) == -1: largeFasta += ".txt"
-    if smallFasta.find(".txt",0) == -1: smallFasta += ".txt"
+ # Searches in the scaffold for a given sequence. If it finds a sequence, allows
+ # the user to output a sequence upstream of the start position in the scaffold
+ # as a file. 
+def sequence_search():
 
-        # Builds a tuple of (name, seq) out of each fasta
-    scaffold = fasta_to_strings(largeFasta)
-    search = fasta_to_strings(smallFasta)
+    print("Sequence search.")
+    print()
     
-        # Changes seq to uppercase
+        # Gets search and scaffold seq, adds .txt to names
+    scaffoldFasta = input("Input scaffold's fasta filename: \n")
+    searchFasta = input("Input search sequence's filename: \n")
+    if scaffoldFasta.find(".txt",0) == -1: scaffoldFasta += ".txt"
+    if searchFasta.find(".txt",0) == -1: searchFasta += ".txt"
+
+        # Builds a tuple of (name, seq) out of each fasta w/ uppercase seq
+    scaffold = fasta_to_strings(scaffoldFasta)
+    search = fasta_to_strings(searchFasta)
     searchSeq = search[1].upper()
     scaffoldSeq = RNA_to_DNA(scaffold[1].upper())
 
         # Runs search
     startCodons = find_matching_seqs(scaffoldSeq, searchSeq)
 
-        # Gets desired filename and base pairs to be returned
+        # Gets desired filename and length of upstream region to be returned
     fileName = input("What would you like to name the output fasta file? \n")
     bp = input("How many base pairs upstream would you like to find? \n")
 
@@ -205,6 +209,87 @@ def main():
         # In other cases, return no results
     else:
         print("No results found.")
+
+
+    # Called in positionSearch to get correct list of positions from user.
+    # If position is greater than given max integer or less than zero,
+    # called recursively to get new list of integers. 
+def get_positions(max): 
+    inputPositions = input()
+    positions = [int(x) for x in inputPositions.split(',')]
+    for p in positions:
+        if ((p < 0) or (p > max)):
+            print("Position " + str(p) + " not in range of scaffold. Enter new position(s):")
+            getPositions(max)
+    return positions
+
+
+ # Called in position_search. Uses filename
+ # and desired sequence length from user and outputs fasta file with *all* seq X 
+ # bp upstream of found sequence
+def position_result(positions, scaffoldName, scaffoldSeq, fileName, bp):
+    listOfTuples = []
+    for i in range(0, len(positions)):
+        start = positions[i]
+        x = start - int(bp)     # Makes sure the sequence doesn't wrap around the scaffold
+        if x < 0:
+            x = 0
+        title = scaffoldName + " from bp " + str(x) + " to " + str(start)
+        title = title.replace("\n", "") + "\n"
+        seq = scaffoldSeq[x:start]
+        listOfTuples.append((title, seq))
+    write_fasta(listOfTuples, fileName)
+    print("File '" + fileName + "' saved.")
+
+
+    # Searches in the scaffold for given positions. Allows the user
+    # to output a sequence upstream of the positions as a file.
+def position_search():
+
+    print("Position search.")
+    print()
+
+        # Gets scaffold seq and adds .txt to name
+    scaffoldFasta = input("Input scaffold's fasta filename: \n")
+    if scaffoldFasta.find(".txt",0) == -1: scaffoldFasta += ".txt"
+
+        # Builds (name, seq) tuple of scaffold and changes seq to uppercase
+    scaffold = fasta_to_strings(scaffoldFasta)
+    scaffoldName = scaffold[0]
+    scaffoldSeq = RNA_to_DNA(scaffold[1].upper())
+
+        # Gets scaffold position to find the upstream region of
+    print("Enter position(s) to find, separated by commas: ")    
+    positions = get_positions(len(scaffoldSeq))
+
+        # Gets desired filename and length of upstream region to be returned
+    fileName = input("What would you like to name the output fasta file? \n")
+    bp = input("How many base pairs upstream would you like to find? \n")
+        
+        # Outputs all desired sequences in a single fasta file
+    position_result(positions, scaffoldName, scaffoldSeq, fileName, bp)
+    
+
+def main():
+
+        # Prints a nicely formatted introduction
+    introText = '''Searches inside a scaffold DNA/RNA sequence for either positions
+    in the scaffold or the start position of a given sequence in the
+    scaffold. Outputs a region upstream of the found position(s) of a
+    given length as a FASTA file.'''
+    intro = textwrap.wrap(introText)
+    for line in intro:
+        print(line)
+
+    print()
+    print("Are you searching by position or with a sequence?")
+    print("1: Position     2: Sequence")
+    
+    searchType = input("")
+    if (searchType=="1") or (searchType=="Position") or (searchType=="position") or (searchType=="pos"):
+        position_search()
+    elif (searchType=="2") or (searchType=="Sequence") or (searchType=="sequence") or (searchType=="seq"):
+        sequence_search()
         
     
 

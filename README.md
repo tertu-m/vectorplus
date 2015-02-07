@@ -1,12 +1,16 @@
-VectorPLUS (0.2)
+VectorPLUS (0.25)
 ==========
 VectorPLUS is a bioinformatics aide written by prototypical college students Henry Ward and Jack Walstrom.
 
-Currently, it can do one thing and one thing only: find a given gene sequence within a larger sequence and
-outputs its regulatory region, given the size of said region. Reads and writes using fasta files.
+VectorPlus returns regions upstream of certain positions in a DNA/RNA sequence.
+These positions can be determined in one of two ways:
+1) Position input - enter the desired positions to find regions upstream of
+2) Sequence search - enter a smaller sequence to search for in a larger sequence
 
-USE: Put your larger DNA sequence, likely a scaffold, and your search sequence in the same folder as
-VectorPLUS.py. Make sure they are fasta files. Then, run VectorPLUS. 
+Reads and writes using FASTA files. Works best if the FASTA file you search in has only one sequence, such
+as a scaffold.
 
-UPCOMING FEATURES: Searching based on similarity.
+NOTE: Make sure all of your sequences to be searched in/with are in the same folder as VectorPlus.
+
+UPCOMING FEATURES: Smarter searching. 
 
