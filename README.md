@@ -12,5 +12,5 @@ as a scaffold.
 
 NOTE: Make sure all of your sequences to be searched in/with are in the same folder as VectorPlus.
 
-UPCOMING FEATURES: Smarter searching. 
+UPCOMING FEATURES: BLAST searching using BioPython. GUI to visualize sequences. 
 
