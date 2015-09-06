@@ -10,7 +10,5 @@ These positions can be determined in one of two ways:
 Reads and writes using FASTA files. Works best if the FASTA file you search in has only one sequence, such
 as a scaffold.
 
-NOTE: Make sure all of your sequences to be searched in/with are in the same folder as VectorPlus. Sequence search is a rather dumb algorithm, and despite certain capabilities (essentially replaces search capabilities in VectorNTI) will soon be replaced with local BLAST. 
-
-UPCOMING FEATURES: BLAST searching using BioPython. GUI to visualize sequences. 
+NOTE: Written to replace VectorNTI sequence search functionality. Strictly better than VectorNTI, but generally inferior to BLAST and other searching algorithms. 
 
